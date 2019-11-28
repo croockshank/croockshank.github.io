@@ -1,8 +1,7 @@
 var dbPromise = idb.open("manutd_app_db", 1, function(upgradeDb) {
   if (!upgradeDb.objectStoreNames.contains("favorite_players")) {
     var players = upgradeDb.createObjectStore("favorite_players", {
-      keyPath: "id",
-      autoIncrement: true
+      keyPath: "id"
     });
     players.createIndex("position", "position", { unique: false });
     players.createIndex("shirtNumber", "shirtNumber", { unique: false });
@@ -16,19 +15,21 @@ var dbPromise = idb.open("manutd_app_db", 1, function(upgradeDb) {
 });
 
 function addFavoritePlayer(
+  id,
   position,
   shirtNumber,
   name,
   nationality,
   countryOfBirth,
   dateOfBirth,
-  id
+  elementId
 ) {
   dbPromise
     .then(function(db) {
       var tx = db.transaction("favorite_players", "readwrite");
       var store = tx.objectStore("favorite_players");
       var item = {
+        id: id,
         position: position,
         shirtNumber: shirtNumber,
         name: name,
@@ -36,14 +37,14 @@ function addFavoritePlayer(
         countryOfBirth: countryOfBirth,
         dateOfBirth: dateOfBirth
       };
-      return store.add(item);
+      return store.put(item);
     })
     .then(function(e) {
-      document.getElementById(id).setAttribute("data-player-id", e);
-      M.toast({html: 'Added to Favorites'})
+      document.getElementById(elementId).setAttribute("data-player-id", e);
+      M.toast({ html: "Added to Favorites" });
     })
     .catch(function(error) {
-      M.toast({html: 'Error: ' + error})
+      M.toast({ html: "Error: " + error });
     });
 }
 
@@ -62,6 +63,25 @@ function getFavoritePlayers() {
     });
 }
 
+function isFavorite(id, elementId) {
+  dbPromise
+    .then(function(db) {
+      var tx = db.transaction("favorite_players", "readonly");
+      var store = tx.objectStore("favorite_players");
+      return store.get(id);
+    })
+    .then(function(player) {
+      if (player != null) {
+        var id = document.getElementById(elementId);
+        id.setAttribute("data-player-id", player.id);
+        id.innerHTML = "favorite";
+      }
+    })
+    .catch(function(error) {
+      console.log(error);
+    });
+}
+
 function deleteFavoritePlayer(id) {
   dbPromise
     .then(function(db) {
@@ -71,10 +91,10 @@ function deleteFavoritePlayer(id) {
       return tx.complete;
     })
     .then(function() {
-      M.toast({html: 'Deleted from Favorites'})
+      M.toast({ html: "Deleted from Favorites" });
       getFavoritePlayers();
     })
     .catch(function(error) {
-      M.toast({html: 'Error: ' + error})
+      M.toast({ html: "Error: " + error });
     });
 }

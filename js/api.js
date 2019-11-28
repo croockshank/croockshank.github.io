@@ -1,4 +1,4 @@
-var base_url = "https://api.football-data.org/v2/";
+const base_url = "https://api.football-data.org/v2/";
 var progressBar = document.querySelector(".progress");
 function status(response) {
   if (response.status !== 200) {
@@ -77,6 +77,7 @@ function iteratePlayers(data, id, index) {
   var playersHTML = "";
   var position = index;
   data.forEach(function(player) {
+    isFavorite(player.id, "favorite-" + position);
     playersHTML += `
     <div class="col s12 m6 l4">
         <div class="card responsive-img">
@@ -93,7 +94,7 @@ function iteratePlayers(data, id, index) {
                 }</h5>
                 <span class="card-title grey-text text-darken-4 truncate">
                 ${player.name}
-                <i class="material-icons right favorite red-text" id="favorite-${position}" onclick="toggleFavoritePlayer('${
+                <i class="material-icons right favorite red-text" id="favorite-${position}" onclick="toggleFavoritePlayer('${player.id}', '${
       player.position
     }', '${player.shirtNumber}', '${player.name}', '${player.nationality}', '${
       player.countryOfBirth
@@ -190,7 +191,6 @@ function getPlayers() {
   if ("caches" in window) {
     caches.match(base_url + "teams/66").then(function(response) {
       if (response) {
-        upcoming;
         response.json().then(function(data) {
           var goalKeepers = filterPlayer("Goalkeeper", data);
           var defenders = filterPlayer("Defender", data);
@@ -413,29 +413,31 @@ function getFinishedMatches() {
 }
 
 function toggleFavoritePlayer(
+  id,
   position,
   shirtNumber,
   fullName,
   nationality,
   countryOfBirth,
   dateOfBirth,
-  id
+  elementId
 ) {
-  var icon = document.getElementById(id);
+  var icon = document.getElementById(elementId);
   if (icon.innerHTML === "favorite_border") {
     icon.innerHTML = "favorite";
     addFavoritePlayer(
+      parseInt(id),
       position,
       shirtNumber !== "null" ? shirtNumber : 0,
       fullName,
       nationality,
       countryOfBirth,
       dateOfBirth,
-      id
+      elementId
     );
   } else {
     icon.innerHTML = "favorite_border";
-    var playerId = document.getElementById(id).getAttribute("data-player-id");
+    var playerId = document.getElementById(elementId).getAttribute("data-player-id");
     deleteFavoritePlayer(parseInt(playerId));
   }
 }
